@@ -28,9 +28,9 @@ public class FileReader {
 
 	public FileReader() {
 		posFolder = new File(
-				"/Users/botty/Documents/University/Cambrdige/Overview of NLP/Sentiment Analysis/Sentiment Analisys/info/Pos");
+				"/Users/botty/Documents/University/Cambrdige/Overview of NLP/Sentiment Analysis/info/Pos");
 		negFolder = new File(
-				"/Users/botty/Documents/University/Cambrdige/Overview of NLP/Sentiment Analysis/Sentiment Analisys/info/Neg");
+				"/Users/botty/Documents/University/Cambrdige/Overview of NLP/Sentiment Analysis/info/Neg");
 	}
 
 	public List<Document> getPosDocs() {

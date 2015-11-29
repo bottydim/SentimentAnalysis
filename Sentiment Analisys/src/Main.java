@@ -58,11 +58,11 @@ public class Main {
 		 wghtSent);
 		 
 
-		// Classifier NBnBag = new NaiveBayes("Without Freq", lexicon);
-		// NBnBag.train(docOrg.getTrainSet());
-		// ((NaiveBayes)NBnBag).switchBag();
-		// NBnBag.evaluate(docOrg.getTestSet());
-		// Classifier.statSign(NB, NBnBag);
+		 Classifier NBnBag = new NaiveBayes("With Freq", lexicon);
+		 NBnBag.train(docOrg.getTrainSet());
+		 ((NaiveBayes)NBnBag).setUseBag(true);
+		 NBnBag.evaluate(docOrg.getTestSet());
+		 Classifier.statSign(NB, NBnBag);
 		//
 		// DocumentOrganizer docOrg2 = new DocumentOrganizer(docOrg);
 		// docOrg2.split(0, 899, 0, 89,900,999,900,999);
@@ -74,18 +74,18 @@ public class Main {
 		
 		 NaiveBayes NBSmooth = new NaiveBayes("Smoothed", lexicon, 1);
 		 NBSmooth.train(docOrg.getTrainSet()); 
-		 NBSmooth.setUseBag(false); 
+		 NBSmooth.setUseBag(true); 
 		 NBSmooth.evaluate(docOrg.getTestSet());
 		 Classifier.statSign(NB, NBSmooth);
-		 for(int i=0;i<NB.getStatSign().length;i++)
-		 {
-			 System.out.println(i+" "+NB.getStatSign()[i]+" "+ NBSmooth.getStatSign()[i]);
-			
-		 }
+//		 for(int i=0;i<NB.getStatSign().length;i++)
+//		 {
+//			 System.out.println(i+" "+NB.getStatSign()[i]+" "+ NBSmooth.getStatSign()[i]);
+//			
+//		 }
 		
-		 
-/*		crossValidation(new NaiveBayes("Normal", lexicon), new NaiveBayes(
-				"Smooth", lexicon, 1), fr);*/
+/*		 
+		crossValidation(new NaiveBayes("Normal", lexicon), new NaiveBayes(
+				"Smooth", lexicon, 1), fr,fr);
 		FileReader frStem = new FileReader();
 		frStem.setLowercase(true);
 		frStem.setStem(true);
@@ -94,12 +94,12 @@ public class Main {
 		System.out.println("feature size:\n"+
 					"not stemmed----stemmed\n"+
 					lexicon.getVocabSize()+"   "+lex.getVocabSize());
-//		crossValidation(new NaiveBayes("UNStemmed + Smooth", lexicon, 1), new NaiveBayes("Stemmed Smooth", lex, 1),frStem);
-		
+		crossValidation(new NaiveBayes("UNStemmed Smooth", lexicon, 1), new NaiveBayes("Stemmed Smooth", lex, 1),fr,frStem);
+		*/
 	}
 
 	public static void crossValidation(Classifier cl1, Classifier cl2,
-			FileReader fr) {
+			FileReader fr1, FileReader fr2) {
 		int repeat = 10;
 		ExecutorService threadExecutor = Executors.newFixedThreadPool(repeat);
 		CrossVal crsVal = new Main.CrossVal(repeat);
@@ -107,8 +107,10 @@ public class Main {
 
 		for (int i = 0; i < repeat; i++) {
 			final int pos = i;
-			DocumentOrganizer dc = new DocumentOrganizer(fr.getPosDocs(),
-					fr.getNegDocs());
+			DocumentOrganizer dc1 = new DocumentOrganizer(fr1.getPosDocs(),
+					fr1.getNegDocs());
+			DocumentOrganizer dc2 = new DocumentOrganizer(fr2.getPosDocs(),
+					fr2.getNegDocs());
 			
 			try {
 				final Classifier tempClas1 = (Classifier) cl1.clone();
@@ -131,12 +133,13 @@ public class Main {
 								+ "-" + (((pos + 1) * 100) - 1));
 						dc.crossConseqSplit(pos * 100, ((pos + 1) * 100) - 1);
 */						System.out.println("Cross-validaiton: mod" + pos);
-						dc.crossModSplit(pos);
-						tempClas1.train(dc.getTrainSet());
-						tempClas2.train(dc.getTrainSet());
+						dc1.crossModSplit(pos);
+						dc2.crossModSplit(pos);
+						tempClas1.train(dc1.getTrainSet());
+						tempClas2.train(dc2.getTrainSet());
 						
-						tempClas1.evaluate(dc.getTestSet());
-						tempClas2.evaluate(dc.getTestSet());
+						tempClas1.evaluate(dc1.getTestSet());
+						tempClas2.evaluate(dc2.getTestSet());
 						crsVal.add(Classifier.statSign(tempClas1, tempClas2),
 								tempClas1.getAccuracy(),
 								tempClas2.getAccuracy());

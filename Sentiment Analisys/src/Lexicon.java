@@ -40,6 +40,7 @@ public class Lexicon {
 	
 		return vocab.get(word);
 	}
+	
 	public Lexicon(Map<String, WordInfo> lexicon) {
 		this.lexicon = lexicon;
 	}

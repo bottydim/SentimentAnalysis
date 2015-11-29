@@ -43,6 +43,11 @@ public class Feature {
 		return "Feature [name=" + name + ", type=" + type + ", val=" + val
 				+ "]";
 	}
+	@Override
+	public boolean equals(Object obj) {
+		Feature f2 = (Feature)obj;
+		return (this.name.equals(f2.name)&&this.type.equals(f2.type));
+	}
 
 	
 	

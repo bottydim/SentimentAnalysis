@@ -3,6 +3,7 @@ import java.math.MathContext;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -11,18 +12,26 @@ import javax.crypto.spec.PSource;
 
 public class NaiveBayes extends Classifier {
 
-	protected HashSet<String> vocab = new HashSet<String>();
 
+		
 	public NaiveBayes(String name, Lexicon lexicon) {
 		this(name, lexicon, 0);
 
 	}
 
 	public NaiveBayes(String name, Lexicon lexicon, double smooth) {
+		this(name + " Naive Bayes", lexicon,smooth,lexicon.vocabSize);
+		this.smooth = smooth;
+
+	}
+	protected NaiveBayes(String name, Lexicon lexicon, double smooth,Integer featSize){
 		super(name + " Naive Bayes", lexicon);
+		this.posLikehood = new double[featSize];
+		this.negLikehood = new double[featSize];
+		this.posFreq = new double[featSize];
+		this.negFreq = new double[featSize];
 		this.smooth = smooth;
 	}
-
 	protected double[] posLikehood;
 	protected double[] negLikehood;
 	protected double posProb = 0;
@@ -30,50 +39,55 @@ public class NaiveBayes extends Classifier {
 	protected boolean trained = false;
 	private boolean useBag = true;
 	private double smooth;
+	private double[] posFreq;
+	private double[] negFreq;
 
 	@Override
 	public void train(List<Document> docs) {
 
-		double[] posFreq = new double[lexicon.vocabSize];
-		double[] negFreq = new double[lexicon.vocabSize];
-		posLikehood = new double[lexicon.vocabSize];
-		negLikehood = new double[lexicon.vocabSize];
+		posFreq = new double[lexicon.vocabSize];
+		negFreq = new double[lexicon.vocabSize];
+
+		double posWords = 0;
+		double negWords = 0;
 		for (Document doc : docs) {
 			if (doc.isPos()) {
 				posProb++;
 				ArrayList<Feature> fs = (ArrayList<Feature>) extractFeatures(doc);
 				for (int i = 0; i < posFreq.length; i++) {
 					Feature feat = fs.get(i);
-					posFreq[i] += feat != null ? (double) feat.getVal()
-							.doubleValue() : 0;
-
+					double freq = feat != null ? feat.getVal().intValue() : 0;
+					posFreq[i] += freq;
+					posWords+= freq;		
 				}
 			} else {
 				negProb++;
 				ArrayList<Feature> fs = (ArrayList<Feature>) extractFeatures(doc);
 				for (int i = 0; i < negFreq.length; i++) {
 					Feature feat = fs.get(i);
-					negFreq[i] += feat != null ? feat.getVal().intValue() : 0;
+					double freq = feat != null ? feat.getVal().intValue() : 0;
+					negFreq[i] += freq;
+					negWords+= freq;
 
 				}
 			}
 
 		}
 
-		// must always be the same as this is how they are init
 		double sum = 0;
 		int cnt = 0;
 		int noPdf = 0;
+		// must always be the same as this is how they are init
 		for (int i = 0; i < negFreq.length; i++) {
-			if (!(smooth > 0) && posFreq[i] + negFreq[i] == 0) {
+			if (!(smooth > 0) && (posFreq[i]==0 || negFreq[i] == 0)) {
 				posLikehood[i] = 0;
 				negLikehood[i] = 0;
 				noPdf++;
 			} else {
 				posLikehood[i] = (posFreq[i] + smooth)
-						/ (posFreq[i] + negFreq[i] + 2 * smooth);
+						/ (posWords + posProb * smooth);
 				negLikehood[i] = (negFreq[i] + smooth)
-						/ (posFreq[i] + negFreq[i] + 2 * smooth);
+						/ (negWords + negProb * smooth);
 
 				sum += posLikehood[i] + negLikehood[i];
 				if (posLikehood[i] + negLikehood[i] != 1) {
@@ -82,9 +96,9 @@ public class NaiveBayes extends Classifier {
 			}
 
 		}
-		System.out.println("pdf:" + sum / (posFreq.length - noPdf));
+/*		System.out.println("pdf:" + sum / (posFreq.length - noPdf));
 		System.out.println("Nopdf: " + noPdf);
-		System.out.println("cnt:" + cnt);
+		System.out.println("cnt:" + cnt);*/
 		posProb /= docs.size();
 		negProb /= docs.size();
 		trained = true;
@@ -132,7 +146,7 @@ public class NaiveBayes extends Classifier {
 		// {
 		// pos = pos.setScale(neg.scale());
 		// }
-		return pos.compareTo(neg) > 0;
+		return pos.compareTo(neg) >= 0;
 	}
 
 	private double caclPosProb(List<Feature> fs, boolean cls) {
@@ -168,9 +182,9 @@ public class NaiveBayes extends Classifier {
 					} else {
 						lklH = Math.pow(0.5, fs.get(i) != null ? 1 : 0);
 					}
-					prod += Math.log(lklH);
+//					prod += Math.log(lklH);
 //					System.out.println(prod+" "+(prod+Math.log(lklH)));
-//					 prod+= 0;
+					 prod+= 0;
 				} else {
 					prod += Math.log(lklH);
 				}

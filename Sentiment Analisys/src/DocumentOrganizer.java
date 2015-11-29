@@ -89,7 +89,7 @@ public class DocumentOrganizer {
 			else
 				trainSet.add(doc);
 		}
-		System.out.println("Train"+trainSet.size()+" Test:"+testSet.size());
+//		System.out.println("Train"+trainSet.size()+" Test:"+testSet.size());
 	}
 	public void crossConseqSplit(Integer tsStart,Integer tsStop)
 	{
